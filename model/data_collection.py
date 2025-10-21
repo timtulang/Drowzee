@@ -13,7 +13,6 @@ If landmarks are missing for a frame, it will not be logged.
 
 """
 
-import time
 import csv
 import os
 from collections import OrderedDict
@@ -28,6 +27,10 @@ CSV_FILE = 'landmarks.csv'
 # Mediapipe
 mp_drawing = mp.solutions.drawing_utils
 mp_holistic = mp.solutions.holistic
+
+# Show landmarks
+SHOW_POSE = True
+SHOW_FACE = True
 
 # define which landmark groups and counts we expect
 # face_landmarks: 468 points
@@ -135,7 +138,7 @@ with mp_holistic.Holistic(
 
         # draw landmarks for visualization
         annotated = frame.copy()
-        if results.face_landmarks:
+        if SHOW_FACE and results.face_landmarks:
             mp_drawing.draw_landmarks(
                 annotated,
                 results.face_landmarks,
@@ -143,7 +146,7 @@ with mp_holistic.Holistic(
                 mp_drawing.DrawingSpec(color=(80,110,10), thickness=1, circle_radius=1),
                 mp_drawing.DrawingSpec(color=(80,256,121), thickness=1)
             )
-        if results.pose_landmarks:
+        if SHOW_POSE and results.pose_landmarks:
             mp_drawing.draw_landmarks(
                 annotated,
                 results.pose_landmarks,
