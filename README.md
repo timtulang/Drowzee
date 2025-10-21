@@ -47,7 +47,7 @@ You should see: "Press 0=drowsy, 1=not drowsy, q=quit"
 <img width="645" height="548" alt="image" src="https://github.com/user-attachments/assets/664b24b9-d5a4-459d-a4e8-c08177e921ea" />
 <img width="641" height="543" alt="image" src="https://github.com/user-attachments/assets/5aa5d72f-00db-44e9-b00c-e93ed4dfbb60" />
 
-
+---
 
 ## How to Collect Data
 
@@ -91,7 +91,8 @@ landmarks_<your_name>.csv
 
 ## 💬 Contact
 For questions or setup issues, contact:
-Timothy Tulang — Project Lead @tulangtimothy.gmail.com or other lines of communication
+Timothy Tulang — Project Lead at tulangtimothy@gmail.com or other lines of communication.
+All emails concerning this project should have "Drowzee Concern" as its subject.
 
 ## ⭐ Thank you for contributing!
 Your data will help train a more accurate and reliable drowsiness detection model.
