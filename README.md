@@ -1,5 +1,7 @@
 # 💤 Drowsy Driver Detection — Data Collection Guide
 
+## NOTE: DO NOT PUSH ANY CHANGES
+
 This repository collects **facial and posture landmarks** using [MediaPipe Holistic](https://developers.google.com/mediapipe/solutions/vision/holistic) and **OpenCV** to train a model that detects driver drowsiness.
 
 Each participant helps by recording themselves while acting **drowsy** and **alert (not drowsy)** using their webcam.  
