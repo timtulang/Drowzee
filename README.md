@@ -13,11 +13,13 @@ The program captures face + pose landmarks and logs them into a CSV file for mod
 git clone https://github.com/<your-username>/drowsy-driver-detector.git
 cd drowsy-driver-detector
 
+
 #### 2. Check your Python version (run in terminal)
 python --version
 The project requires you to have **Python 3.11**
 If you do not have it installed, go to:
 👉 https://www.python.org/downloads/
+
 
 #### 3. Create a virtual environment (run in terminal)
 python -m venv .venv
@@ -26,16 +28,24 @@ source .venv/bin/activate    # for Linux/macOS
 
 *Make sure venv is running before proceeding to Step 4. You should see (.venv) before the directory in your terminal.*
 
+
 #### 4. Install Dependencies (run in terminal)
 Inside the virtual environment
 pip install opencv-python mediapipe tensorflow pandas numpy scikit-learn matplotlib
 *If mediapipe fails to install, make sure that you are running Python 3.11*
+
 
 #### 5. Run the Data Collection Program (run in terminal)
 python data_collection.py
 The webcam window will open and automatically detect your face and posture.
 
 You should see: "Press 0=drowsy, 1=not drowsy, q=quit"
+
+### If you've done all steps correctly, you should see something like this:
+<img width="645" height="548" alt="image" src="https://github.com/user-attachments/assets/664b24b9-d5a4-459d-a4e8-c08177e921ea" />
+<img width="641" height="543" alt="image" src="https://github.com/user-attachments/assets/5aa5d72f-00db-44e9-b00c-e93ed4dfbb60" />
+
+
 
 ## How to Collect Data
 
