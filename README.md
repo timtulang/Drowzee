@@ -75,8 +75,8 @@ q / ESC	    Quit	        Exit safely
 ### 📄 Data Output
 Each key press logs one row to landmarks.csv. Check if the logged data is correct periodically. The first column is the label. Hence, it's value should be either 0 or 1 depending on what you pressed.
 
-**When finished, upload the csv file to the designated Google Drive:**
-landmarks_<your_name>.csv
+**When finished, upload the csv file to the designated [Google Drive] (https://drive.google.com/drive/folders/1P2QTn9w6sk8-BVCmJv9m9M1bauT_3MhT?usp=drive_link):**
+landmarks_<last_name>.csv
 
 ## 🧩 Troubleshooting
 ❌ Webcam not opening → Close other apps using your camera
