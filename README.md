@@ -13,7 +13,7 @@ The program captures face + pose landmarks and logs them into a CSV file for mod
 
 #### 1. Clone the Repository (run in terminal)
 ```
-git clone https://github.com/<your-username>/drowsy-driver-detector.git
+git clone https://github.com/timtulang/Drowzee.git
 cd drowsy-driver-detector
 ```
 
