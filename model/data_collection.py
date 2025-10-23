@@ -35,9 +35,9 @@ SHOW_FACE = True
 # define which landmark groups and counts we expect
 # face_landmarks: 468 points
 # pose_landmarks: 33 points
-# We'll flatten in the order: face (468 * 3), pose (33 * 4 -> x,y,z,visibility)
+# We'll flatten in the order: face (478 * 3), pose (33 * 4 -> x,y,z,visibility)
 
-FACE_COUNT = 468
+FACE_COUNT = 478
 POSE_COUNT = 33
 
 # helper to create header
@@ -48,14 +48,15 @@ def make_header():
         header += [f'face_{i}_x', f'face_{i}_y', f'face_{i}_z']
     # pose landmarks
     for i in range(POSE_COUNT):
-        header += [f'pose_{i}_x', f'pose_{i}_y', f'pose_{i}_z', f'pose_{i}_v']
-    header += ['label', 'timestamp']
+        header += [f'pose_{i}_x', f'pose_{i}_y', f'pose_{i}_z', f'pose_{i}_v', ]
+    header = ['label'] + header
     return header
 
 # initialize CSV with header if not exists
 if not os.path.exists(CSV_FILE):
     with open(CSV_FILE, mode='w', newline='') as f:
         writer = csv.writer(f)
+        writer.writerow(make_header())
     print(f'Created {CSV_FILE} with header')
 
 
