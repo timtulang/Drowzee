@@ -11,7 +11,7 @@ Each saved row is appended to a CSV file `landmarks.csv` in the working director
 We collect both face and pose landmarks if available and flatten them in a fixed order.
 If landmarks are missing for a frame, it will not be logged.
 
-"""
+"""     
 
 import csv
 import os
@@ -21,8 +21,64 @@ import cv2
 import numpy as np
 import mediapipe as mp
 
+def normalize_landmarks(face_landmarks, pose_landmarks):
+    """Returns a flat list of length FACE_COUNT*3 + POSE_COUNT*4 (or raises ValueError if missing)"""
+    if face_landmarks is None or pose_landmarks is None:
+        raise ValueError('Missing face or pose landmarks')
+
+    # convert to numpy arrays
+    face = np.array([[lm.x, lm.y, lm.z] for lm in face_landmarks.landmark])
+    pose = np.array([[lm.x, lm.y, lm.z, getattr(lm, 'visibility', 0.0)] for lm in pose_landmarks.landmark])
+
+    # choose nose / face reference point: use face landmark index 1 (nose tip in mp face mesh indexing)
+    ref = face[1, :2].copy()  # x,y
+
+    # scale factor: distance between left and right eye (use face landmarks indices 33 and 263 approximate)
+    # fallback to distance to ear if eyes missing
+    try:
+        left_eye = face[33, :2]
+        right_eye = face[263, :2]
+        eye_dist = np.linalg.norm(left_eye - right_eye)
+        if eye_dist < 1e-6:
+            scale = 1.0
+        else:
+            scale = eye_dist
+    except Exception:
+        scale = 1.0
+
+    # normalize face: subtract ref and divide by scale
+    face_xy = (face[:, :2] - ref) / scale
+    face_z = face[:, 2:]  # keep z, center by subtracting mean z
+    face_z = face_z - np.mean(face_z)
+
+    face_flat = np.hstack([face_xy, face_z]).flatten().tolist()  # length FACE_COUNT*3
+
+    # normalize pose: subtract reference (use pose landmark 0 - nose) if present
+    pose_xy = (pose[:, :2] - ref) / scale
+    pose_z = pose[:, 2:3] - np.mean(pose[:, 2:3])
+    pose_v = pose[:, 3:4]
+    pose_flat = np.hstack([pose_xy, pose_z, pose_v]).flatten().tolist()  # length POSE_COUNT*4
+
+    return face_flat + pose_flat
+
+# First: Compute the average brightness
+def comp_brightness(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return np.mean(gray)
+
+# Second: Adjust brightness
+def adjust_brightness(image, target_brightness=130):
+    current_brightness = comp_brightness(image)
+    ratio = target_brightness / (current_brightness + 1e-5)
+    adjusted = cv2.convertScaleAbs(image, alpha=ratio, beta=0)
+    return adjusted
+
+# Create folders for pictures brightness adjustment
+os.makedirs("captures/orig", exist_ok=True)
+os.makedirs("captures/adjusted", exist_ok=True)
+
 # OUTPUT CSV
-CSV_FILE = 'landmarks.csv'
+CSV_FILE = 'landmarks_final.csv' # Added another csv file for testing
 
 # Mediapipe
 mp_drawing = mp.solutions.drawing_utils
@@ -66,47 +122,6 @@ if not os.path.exists(CSV_FILE):
 # - z values left as-is (already relative depth), but we will also center them.
 
 
-def normalize_landmarks(face_landmarks, pose_landmarks):
-    """Returns a flat list of length FACE_COUNT*3 + POSE_COUNT*4 (or raises ValueError if missing)"""
-    if face_landmarks is None or pose_landmarks is None:
-        raise ValueError('Missing face or pose landmarks')
-
-    # convert to numpy arrays
-    face = np.array([[lm.x, lm.y, lm.z] for lm in face_landmarks.landmark])
-    pose = np.array([[lm.x, lm.y, lm.z, getattr(lm, 'visibility', 0.0)] for lm in pose_landmarks.landmark])
-
-    # choose nose / face reference point: use face landmark index 1 (nose tip in mp face mesh indexing)
-    ref = face[1, :2].copy()  # x,y
-
-    # scale factor: distance between left and right eye (use face landmarks indices 33 and 263 approximate)
-    # fallback to distance to ear if eyes missing
-    try:
-        left_eye = face[33, :2]
-        right_eye = face[263, :2]
-        eye_dist = np.linalg.norm(left_eye - right_eye)
-        if eye_dist < 1e-6:
-            scale = 1.0
-        else:
-            scale = eye_dist
-    except Exception:
-        scale = 1.0
-
-    # normalize face: subtract ref and divide by scale
-    face_xy = (face[:, :2] - ref) / scale
-    face_z = face[:, 2:]  # keep z, center by subtracting mean z
-    face_z = face_z - np.mean(face_z)
-
-    face_flat = np.hstack([face_xy, face_z]).flatten().tolist()  # length FACE_COUNT*3
-
-    # normalize pose: subtract reference (use pose landmark 0 - nose) if present
-    pose_xy = (pose[:, :2] - ref) / scale
-    pose_z = pose[:, 2:3] - np.mean(pose[:, 2:3])
-    pose_v = pose[:, 3:4]
-    pose_flat = np.hstack([pose_xy, pose_z, pose_v]).flatten().tolist()  # length POSE_COUNT*4
-
-    return face_flat + pose_flat
-
-
 # main capture loop
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
@@ -121,6 +136,7 @@ with mp_holistic.Holistic(
     min_tracking_confidence=0.5
 ) as holistic:
     print('Started webcam. Press 0 or 1 to log, q to quit.')
+    frame_id = 0
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -136,6 +152,15 @@ with mp_holistic.Holistic(
         results = holistic.process(image_rgb)
         image_rgb.flags.writeable = True
 
+        # Adjust brightness automatically
+        adjusted = adjust_brightness(frame, target_brightness=130)
+        
+        # Compute brightness values
+        orig_brightness = comp_brightness(frame)
+        adj_brightness = comp_brightness(adjusted)
+        comparison = np.hstack((frame, adjusted))
+        cv2.imshow("Comparison (Left: Original | Right: Adjusted)", comparison)
+        
         # draw landmarks for visualization
         annotated = frame.copy()
         if SHOW_FACE and results.face_landmarks:
@@ -167,6 +192,13 @@ with mp_holistic.Holistic(
                 print('Skipping save — incomplete landmarks:', e)
                 continue
             row = [label] + vals
+            
+            # Save as images
+            orig_path = f"captures/original/frame_{frame_id}.jpg"
+            adj_path = f"captures/adjusted/frame_{frame_id}.jpg"
+            cv2.imwrite(orig_path, frame)
+            cv2.imwrite(adj_path, adjusted)
+            
             with open(CSV_FILE, mode='a', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(row)
