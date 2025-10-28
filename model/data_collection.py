@@ -78,7 +78,7 @@ os.makedirs("captures/orig", exist_ok=True)
 os.makedirs("captures/adjusted", exist_ok=True)
 
 # OUTPUT CSV
-CSV_FILE = 'landmarks_final.csv' # Added another csv file for testing
+CSV_FILE = 'landmarks.csv' # Added another csv file for testing
 
 # Mediapipe
 mp_drawing = mp.solutions.drawing_utils
@@ -89,11 +89,11 @@ SHOW_POSE = True
 SHOW_FACE = True
 
 # define which landmark groups and counts we expect
-# face_landmarks: 468 points
+# face_landmarks: 478 points
 # pose_landmarks: 33 points
 # We'll flatten in the order: face (468 * 3), pose (33 * 4 -> x,y,z,visibility)
 
-FACE_COUNT = 468
+FACE_COUNT = 478
 POSE_COUNT = 33
 
 # helper to create header
@@ -105,13 +105,14 @@ def make_header():
     # pose landmarks
     for i in range(POSE_COUNT):
         header += [f'pose_{i}_x', f'pose_{i}_y', f'pose_{i}_z', f'pose_{i}_v']
-    header += ['label', 'timestamp']
+    header = ['label'] + header
     return header
 
 # initialize CSV with header if not exists
 if not os.path.exists(CSV_FILE):
     with open(CSV_FILE, mode='w', newline='') as f:
         writer = csv.writer(f)
+        writer.writerow(make_header())
     print(f'Created {CSV_FILE} with header')
 
 
@@ -156,13 +157,13 @@ with mp_holistic.Holistic(
         adjusted = adjust_brightness(frame, target_brightness=130)
         
         # Compute brightness values
-        orig_brightness = comp_brightness(frame)
-        adj_brightness = comp_brightness(adjusted)
-        comparison = np.hstack((frame, adjusted))
-        cv2.imshow("Comparison (Left: Original | Right: Adjusted)", comparison)
+        # orig_brightness = comp_brightness(frame)
+        # adj_brightness = comp_brightness(adjusted)
+        # comparison = np.hstack((frame, adjusted))
+        # cv2.imshow("Comparison (Left: Original | Right: Adjusted)", comparison)
         
         # draw landmarks for visualization
-        annotated = frame.copy()
+        annotated = adjusted.copy()
         if SHOW_FACE and results.face_landmarks:
             mp_drawing.draw_landmarks(
                 annotated,
