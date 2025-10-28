@@ -1,3 +1,5 @@
 .venv
 landmarks.csv
-model/captures
+captures
+drowsy_cnn_model.keras
+scaler.save
